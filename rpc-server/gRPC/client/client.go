@@ -1,11 +1,13 @@
 package client
 
 import (
+	"context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"rpc-server/config"
 	"rpc-server/gRPC/paseto"
 	auth "rpc-server/gRPC/proto"
+	"time"
 )
 
 type GRPCClient struct {
@@ -28,10 +30,33 @@ func NewGRPCClient(cfg *config.Config) (*GRPCClient, error) {
 	return c, nil
 }
 
-func (g *GRPCClient) CreateAuth(address string) (*auth.AuthData, error) {
-	return nil, nil
+func (g *GRPCClient) CreateAuth(name string) (*auth.AuthData, error) {
+	now := time.Now()
+	expireTime := now.Add(30 * time.Minute)
+
+	authData := &auth.AuthData{
+		Name:       name,
+		CreateDate: now.Unix(),
+		ExpireDate: expireTime.Unix(),
+	}
+
+	if token, err := g.pasetoMaker.CreateNewToken(authData); err != nil {
+		return nil, err
+	} else {
+		authData.Token = token
+
+		if res, err := g.authClient.CreateAuth(context.Background(), &auth.CreateTokenReq{Auth: authData}); err != nil {
+			return nil, err
+		} else {
+			return res.Auth, nil
+		}
+	}
 }
 
-func (g *GRPCClient) VerifyAuth(token string) (*auth.VerifyTokenRes, error) {
-	return nil, nil
+func (g *GRPCClient) VerifyAuth(token string) (*auth.Verify, error) {
+	if res, err := g.authClient.VerifyAuth(context.Background(), &auth.VerifyTokenReq{Token: token}); err != nil {
+		return nil, err
+	} else {
+		return res.V, nil
+	}
 }
