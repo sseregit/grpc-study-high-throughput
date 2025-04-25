@@ -40,7 +40,7 @@ func (g *GRPCClient) CreateAuth(name string) (*auth.AuthData, error) {
 		ExpireDate: expireTime.Unix(),
 	}
 
-	if token, err := g.pasetoMaker.CreateNewToken(authData); err != nil {
+	if token, err := g.pasetoMaker.CreateNewToken(*authData); err != nil {
 		return nil, err
 	} else {
 		authData.Token = token
