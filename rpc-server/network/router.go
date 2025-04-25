@@ -22,6 +22,9 @@ func NewNetwork(cfg *config.Config, service *service.Service, gRPCClient *client
 		engin:      gin.New(),
 	}
 
+	n.engin.POST("/login", n.login)
+	n.engin.GET("/verify", n.verifyLogin(), n.verify)
+
 	return n, nil
 }
 
